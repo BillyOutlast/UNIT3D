@@ -89,85 +89,115 @@ class ProcessTvJob implements ShouldQueue
 
     public function handle(): void
     {
-        // Tv
+        try {
+            // Tv
+            $tvScraper = new Client\TV($this->id);
+            \Log::debug('ProcessTvJob started', ['tv_id' => $this->id]);
 
-        $tvScraper = new Client\TV($this->id);
+            if ($tvScraper->getTv() === null) {
+                \Log::error('TMDB API returned null for TV ID', ['tv_id' => $this->id, 'scraper_data' => $tvScraper->data ?? null]);
+                return;
+            }
+            \Log::debug('TMDB API returned TV data', ['tv_id' => $this->id, 'tv_data' => $tvScraper->getTv()]);
 
-        if ($tvScraper->getTv() === null) {
-            return;
-        }
+            $tv = TmdbTv::updateOrCreate(['id' => $this->id], $tvScraper->getTv());
+            \Log::debug('Updated or created TmdbTv', ['tv_id' => $this->id, 'tv_model' => $tv]);
 
-        $tv = TmdbTv::updateOrCreate(['id' => $this->id], $tvScraper->getTv());
+            // Companies
+            $companies = [];
+            \Log::debug('Processing production companies', ['tv_id' => $this->id, 'companies_raw' => $tvScraper->data['production_companies'] ?? null]);
 
-        // Companies
-
-        $companies = [];
-
-        foreach ($tvScraper->data['production_companies'] ?? [] as $company) {
-            $companies[] = (new Client\Company($company['id']))->getCompany();
-        }
-
-        TmdbCompany::upsert($companies, 'id');
-        $tv->companies()->sync(array_unique(array_column($companies, 'id')));
-
-        // Networks
-
-        $networks = [];
-
-        foreach ($tvScraper->data['networks'] ?? [] as $network) {
-            $networks[] = (new Client\Network($network['id']))->getNetwork();
-        }
-
-        TmdbNetwork::upsert($networks, 'id');
-        $tv->networks()->sync(array_unique(array_column($networks, 'id')));
-
-        // Genres
-
-        TmdbGenre::upsert($tvScraper->getGenres(), 'id');
-        $tv->genres()->sync(array_unique(array_column($tvScraper->getGenres(), 'id')));
-
-        // People
-
-        $credits = $tvScraper->getCredits();
-        $people = [];
-        $cache = [];
-
-        foreach (array_unique(array_column($credits, 'tmdb_person_id')) as $personId) {
-            // TMDB caches their api responses for 8 hours, so don't abuse them
-
-            $cacheKey = "tmdb-person-scraper:{$personId}";
-
-            if (cache()->has($cacheKey)) {
-                continue;
+            foreach ($tvScraper->data['production_companies'] ?? [] as $company) {
+                $companies[] = (new Client\Company($company['id']))->getCompany();
+                \Log::debug('Fetched company', ['company_id' => $company['id'], 'company_data' => end($companies)]);
             }
 
-            $people[] = (new Client\Person($personId))->getPerson();
+            TmdbCompany::upsert($companies, 'id');
+            $tv->companies()->sync(array_unique(array_column($companies, 'id')));
+            \Log::debug('Upserted and synced companies', ['tv_id' => $this->id, 'company_ids' => array_column($companies, 'id')]);
 
-            $cache[$cacheKey] = now();
+            // Networks
+            $networks = [];
+            \Log::debug('Processing networks', ['tv_id' => $this->id, 'networks_raw' => $tvScraper->data['networks'] ?? null]);
+
+            foreach ($tvScraper->data['networks'] ?? [] as $network) {
+                $networks[] = (new Client\Network($network['id']))->getNetwork();
+                \Log::debug('Fetched network', ['network_id' => $network['id'], 'network_data' => end($networks)]);
+            }
+
+            TmdbNetwork::upsert($networks, 'id');
+            $tv->networks()->sync(array_unique(array_column($networks, 'id')));
+            \Log::debug('Upserted and synced networks', ['tv_id' => $this->id, 'network_ids' => array_column($networks, 'id')]);
+
+            // Genres
+            TmdbGenre::upsert($tvScraper->getGenres(), 'id');
+            $tv->genres()->sync(array_unique(array_column($tvScraper->getGenres(), 'id')));
+            \Log::debug('Upserted and synced genres', ['tv_id' => $this->id, 'genre_ids' => array_column($tvScraper->getGenres(), 'id')]);
+
+            // People
+            $credits = $tvScraper->getCredits();
+            $people = [];
+            $cache = [];
+            \Log::debug('Processing credits', ['tv_id' => $this->id, 'credits' => $credits]);
+
+            foreach (array_unique(array_column($credits, 'tmdb_person_id')) as $personId) {
+                // TMDB caches their api responses for 8 hours, so don't abuse them
+                $cacheKey = "tmdb-person-scraper:{$personId}";
+                if (cache()->has($cacheKey)) {
+                    \Log::debug('Person cache hit, skipping', ['person_id' => $personId]);
+                    continue;
+                }
+                $people[] = (new Client\Person($personId))->getPerson();
+                \Log::debug('Fetched person', ['person_id' => $personId, 'person_data' => end($people)]);
+                $cache[$cacheKey] = now();
+            }
+
+            foreach (collect($people)->chunk(intdiv(65_000, 13)) as $people) {
+                TmdbPerson::upsert($people->toArray(), 'id');
+                \Log::debug('Upserted people chunk', ['tv_id' => $this->id, 'chunk_size' => count($people)]);
+            }
+
+            if ($cache !== []) {
+                cache()->put($cache, 8 * 3600);
+                \Log::debug('Updated person cache', ['tv_id' => $this->id, 'cache_keys' => array_keys($cache)]);
+            }
+
+            TmdbCredit::where('tmdb_tv_id', '=', $this->id)->delete();
+            TmdbCredit::upsert($credits, ['tmdb_person_id', 'tmdb_movie_id', 'tmdb_tv_id', 'occupation_id', 'character']);
+            \Log::debug('Upserted credits', ['tv_id' => $this->id, 'credit_count' => count($credits)]);
+
+            // Recommendations
+            $tv->recommendedTv()->sync(array_unique(array_column($tvScraper->getRecommendations(), 'recommended_tmdb_tv_id')));
+            \Log::debug('Synced recommended TV', ['tv_id' => $this->id, 'recommendations' => $tvScraper->getRecommendations()]);
+
+            Torrent::query()
+                ->where('tmdb_tv_id', '=', $this->id)
+                ->whereRelation('category', 'tv_meta', '=', true)
+                ->searchable();
+            \Log::debug('Marked torrents as searchable', ['tv_id' => $this->id]);
+
+            // TMDB caches their api responses for 8 hours, so don't abuse them
+            cache()->put("tmdb-tv-scraper:{$this->id}", now(), 8 * 3600);
+            \Log::debug('Updated TV scraper cache', ['tv_id' => $this->id]);
+        } catch (\Throwable $e) {
+            \Log::error('ProcessTvJob failed with exception', [
+                'tv_id' => $this->id,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
         }
+    }
 
-        foreach (collect($people)->chunk(intdiv(65_000, 13)) as $people) {
-            TmdbPerson::upsert($people->toArray(), 'id');
-        }
-
-        if ($cache !== []) {
-            cache()->put($cache, 8 * 3600);
-        }
-
-        TmdbCredit::where('tmdb_tv_id', '=', $this->id)->delete();
-        TmdbCredit::upsert($credits, ['tmdb_person_id', 'tmdb_movie_id', 'tmdb_tv_id', 'occupation_id', 'character']);
-
-        // Recommendations
-
-        $tv->recommendedTv()->sync(array_unique(array_column($tvScraper->getRecommendations(), 'recommended_tmdb_tv_id')));
-
-        Torrent::query()
-            ->where('tmdb_tv_id', '=', $this->id)
-            ->whereRelation('category', 'tv_meta', '=', true)
-            ->searchable();
-
-        // TMDB caches their api responses for 8 hours, so don't abuse them
-
-        cache()->put("tmdb-tv-scraper:{$this->id}", now(), 8 * 3600);
+    /**
+     * Handle a job failure.
+     */
+    public function failed($exception): void
+    {
+        \Log::error('ProcessTvJob permanently failed', [
+            'tv_id' => $this->id,
+            'exception' => $exception->getMessage(),
+            'trace' => $exception->getTraceAsString(),
+        ]);
     }
 }
