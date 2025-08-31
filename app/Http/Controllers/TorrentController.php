@@ -184,6 +184,7 @@ class TorrentController extends Controller
                             $cat->movie_meta => 'movie',
                             $cat->tv_meta    => 'tv',
                             $cat->game_meta  => 'game',
+                            $cat->porn_meta  => 'porn',
                             $cat->music_meta => 'music',
                             $cat->no_meta    => 'no',
                             default          => 'no',
@@ -346,14 +347,15 @@ class TorrentController extends Controller
                 ->get()
                 ->mapWithKeys(fn ($category) => [$category->id => [
                     'name' => $category->name,
-                    'type' => match (true) {
-                        $category->movie_meta => 'movie',
-                        $category->tv_meta    => 'tv',
-                        $category->game_meta  => 'game',
-                        $category->music_meta => 'music',
-                        $category->no_meta    => 'no',
-                        default               => 'no',
-                    },
+                            'type' => match (true) {
+                                $category->movie_meta => 'movie',
+                                $category->tv_meta    => 'tv',
+                                $category->game_meta  => 'game',
+                                $category->porn_meta  => 'porn',
+                                $category->music_meta => 'music',
+                                $category->no_meta    => 'no',
+                                default               => 'no',
+                            },
                 ]])
                 ->toArray(),
             'types'        => Type::orderBy('position')->get(),
@@ -369,6 +371,9 @@ class TorrentController extends Controller
             'mal'          => $request->mal,
             'tvdb'         => $request->tvdb,
             'igdb'         => $request->igdb,
+            'stadhdb'      => $request->stadhdb,
+            'fansdb'       => $request->fansdb,
+            'theporndb'    => $request->theporndb,
         ]);
     }
 
