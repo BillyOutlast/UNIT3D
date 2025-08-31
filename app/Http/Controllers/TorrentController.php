@@ -371,7 +371,7 @@ class TorrentController extends Controller
             'mal'          => $request->mal,
             'tvdb'         => $request->tvdb,
             'igdb'         => $request->igdb,
-            'stadhdb'      => $request->stadhdb,
+            'stashdb'      => $request->stashdb,
             'fansdb'       => $request->fansdb,
             'theporndb'    => $request->theporndb,
         ]);

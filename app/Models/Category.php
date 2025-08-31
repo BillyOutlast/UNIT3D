@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool        $game_meta
  * @property bool        $tv_meta
  * @property bool        $movie_meta
+ * @property bool        $porn_meta
  */
 class Category extends Model
 {
@@ -60,6 +61,7 @@ class Category extends Model
             'game_meta'  => 'bool',
             'tv_meta'    => 'bool',
             'movie_meta' => 'bool',
+            'porn_meta'  => 'bool',
         ];
     }
 
