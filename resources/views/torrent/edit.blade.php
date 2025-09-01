@@ -104,6 +104,169 @@
                         {{ __('torrent.category') }}
                     </label>
                 </p>
+                    <!-- Porn Meta Fields -->
+                    <div class="form__group--horizontal" x-show="cats[cat].type === 'porn'">
+                        <div class="form__group--vertical">
+                            <p class="form__group">
+                                <input
+                                    type="checkbox"
+                                    class="form__checkbox"
+                                    id="scene_exists_on_theporndb"
+                                    name="scene_exists_on_theporndb"
+                                    value="1"
+                                    @checked(old('scene_exists_on_theporndb', $torrent->theporndb_scene_id))
+                                    x-model="scene_exists_on_theporndb"
+                                    @change="scene_exists_on_theporndb = !!$event.target.checked"
+                                />
+                                <label class="form__label" for="scene_exists_on_theporndb">
+                                    This scene exists on ThePornDB
+                                </label>
+                            </p>
+                            <p class="form__group" x-show="!!scene_exists_on_theporndb">
+                                <input type="hidden" name="theporndb_scene_id" value="0" />
+                                <input
+                                    type="text"
+                                    name="theporndb_scene_id"
+                                    id="auto_theporndb_scene"
+                                    class="form__text"
+                                    placeholder=" "
+                                    x-bind:value="scene_exists_on_theporndb ? '{{ old('theporndb_scene_id', $torrent->theporndb_scene_id) }}' : ''"
+                                    :required="scene_exists_on_theporndb"
+                                />
+                                <label class="form__label form__label--floating" for="auto_theporndb_scene">
+                                    ThePornDB Scene ID
+                                </label>
+                            </p>
+                        </div>
+                        <div class="form__group--vertical">
+                            <p class="form__group">
+                                <input
+                                    type="checkbox"
+                                    class="form__checkbox"
+                                    id="movie_exists_on_theporndb"
+                                    name="movie_exists_on_theporndb"
+                                    value="1"
+                                    @checked(old('movie_exists_on_theporndb', $torrent->theporndb_movie_id))
+                                    x-model="movie_exists_on_theporndb"
+                                    @change="movie_exists_on_theporndb = !!$event.target.checked"
+                                />
+                                <label class="form__label" for="movie_exists_on_theporndb">
+                                    This movie exists on ThePornDB
+                                </label>
+                            </p>
+                            <p class="form__group" x-show="!!movie_exists_on_theporndb">
+                                <input type="hidden" name="theporndb_movie_id" value="0" />
+                                <input
+                                    type="text"
+                                    name="theporndb_movie_id"
+                                    id="auto_theporndb_movie"
+                                    class="form__text"
+                                    placeholder=" "
+                                    x-bind:value="movie_exists_on_theporndb ? '{{ old('theporndb_movie_id', $torrent->theporndb_movie_id) }}' : ''"
+                                    :required="movie_exists_on_theporndb"
+                                />
+                                <label class="form__label form__label--floating" for="auto_theporndb_movie">
+                                    ThePornDB Movie ID
+                                </label>
+                            </p>
+                        </div>
+                        <div class="form__group--vertical">
+                            <p class="form__group">
+                                <input
+                                    type="checkbox"
+                                    class="form__checkbox"
+                                    id="jav_exists_on_theporndb"
+                                    name="jav_exists_on_theporndb"
+                                    value="1"
+                                    @checked(old('jav_exists_on_theporndb', $torrent->theporndb_jav_id))
+                                    x-model="jav_exists_on_theporndb"
+                                    @change="jav_exists_on_theporndb = !!$event.target.checked"
+                                />
+                                <label class="form__label" for="jav_exists_on_theporndb">
+                                    This JAV exists on ThePornDB
+                                </label>
+                            </p>
+                            <p class="form__group" x-show="!!jav_exists_on_theporndb">
+                                <input type="hidden" name="theporndb_jav_id" value="0" />
+                                <input
+                                    type="text"
+                                    name="theporndb_jav_id"
+                                    id="auto_theporndb_jav"
+                                    class="form__text"
+                                    placeholder=" "
+                                    x-bind:value="jav_exists_on_theporndb ? '{{ old('theporndb_jav_id', $torrent->theporndb_jav_id) }}' : ''"
+                                    :required="jav_exists_on_theporndb"
+                                />
+                                <label class="form__label form__label--floating" for="auto_theporndb_jav">
+                                    ThePornDB JAV ID
+                                </label>
+                            </p>
+                        </div>
+                        <div class="form__group--vertical">
+                            <p class="form__group">
+                                <input
+                                    type="checkbox"
+                                    class="form__checkbox"
+                                    id="stashdb_exists"
+                                    name="stashdb_exists"
+                                    value="1"
+                                    @checked(old('stashdb_exists', $torrent->stashdb_id))
+                                    x-model="stashdb_exists"
+                                    @change="stashdb_exists = !!$event.target.checked"
+                                />
+                                <label class="form__label" for="stashdb_exists">
+                                    This scene exists on StashDB
+                                </label>
+                            </p>
+                            <p class="form__group" x-show="!!stashdb_exists">
+                                <input type="hidden" name="stashdb_id" value="0" />
+                                <input
+                                    type="text"
+                                    name="stashdb_id"
+                                    id="auto_stashdb"
+                                    class="form__text"
+                                    placeholder=" "
+                                    x-bind:value="stashdb_exists ? '{{ old('stashdb_id', $torrent->stashdb_id) }}' : ''"
+                                    :required="stashdb_exists"
+                                />
+                                <label class="form__label form__label--floating" for="auto_stashdb">
+                                    StashDB ID
+                                </label>
+                            </p>
+                        </div>
+                        <div class="form__group--vertical">
+                            <p class="form__group">
+                                <input
+                                    type="checkbox"
+                                    class="form__checkbox"
+                                    id="fansdb_exists"
+                                    name="fansdb_exists"
+                                    value="1"
+                                    @checked(old('fansdb_exists', $torrent->fansdb_id))
+                                    x-model="fansdb_exists"
+                                    @change="fansdb_exists = !!$event.target.checked"
+                                />
+                                <label class="form__label" for="fansdb_exists">
+                                    This scene exists on FansDB
+                                </label>
+                            </p>
+                            <p class="form__group" x-show="!!fansdb_exists">
+                                <input type="hidden" name="fansdb_id" value="0" />
+                                <input
+                                    type="text"
+                                    name="fansdb_id"
+                                    id="auto_fansdb"
+                                    class="form__text"
+                                    placeholder=" "
+                                    x-bind:value="fansdb_exists ? '{{ old('fansdb_id', $torrent->fansdb_id) }}' : ''"
+                                    :required="fansdb_exists"
+                                />
+                                <label class="form__label form__label--floating" for="auto_fansdb">
+                                    FansDB ID
+                                </label>
+                            </p>
+                        </div>
+                    </div>
                 <p class="form__group">
                     <select
                         id="type_id"
