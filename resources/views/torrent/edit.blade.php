@@ -131,7 +131,7 @@
                                     class="form__text"
                                     placeholder=" "
                                     x-bind:value="scene_exists_on_theporndb ? '{{ old('theporndb_scene_id', $torrent->theporndb_scene_id) }}' : ''"
-                                    :required="scene_exists_on_theporndb"
+                                    :required="cats[cat].type === 'porn' && scene_exists_on_theporndb"
                                 />
                                 <label class="form__label form__label--floating" for="auto_theporndb_scene">
                                     ThePornDB Scene ID
@@ -163,7 +163,7 @@
                                     class="form__text"
                                     placeholder=" "
                                     x-bind:value="movie_exists_on_theporndb ? '{{ old('theporndb_movie_id', $torrent->theporndb_movie_id) }}' : ''"
-                                    :required="movie_exists_on_theporndb"
+                                    :required="cats[cat].type === 'porn' && movie_exists_on_theporndb"
                                 />
                                 <label class="form__label form__label--floating" for="auto_theporndb_movie">
                                     ThePornDB Movie ID
@@ -195,7 +195,7 @@
                                     class="form__text"
                                     placeholder=" "
                                     x-bind:value="jav_exists_on_theporndb ? '{{ old('theporndb_jav_id', $torrent->theporndb_jav_id) }}' : ''"
-                                    :required="jav_exists_on_theporndb"
+                                    :required="cats[cat].type === 'porn' && jav_exists_on_theporndb"
                                 />
                                 <label class="form__label form__label--floating" for="auto_theporndb_jav">
                                     ThePornDB JAV ID
@@ -227,7 +227,7 @@
                                     class="form__text"
                                     placeholder=" "
                                     x-bind:value="stashdb_exists ? '{{ old('stashdb_id', $torrent->stashdb_id) }}' : ''"
-                                    :required="stashdb_exists"
+                                    :required="cats[cat].type === 'porn' && stashdb_exists"
                                 />
                                 <label class="form__label form__label--floating" for="auto_stashdb">
                                     StashDB ID
@@ -259,7 +259,7 @@
                                     class="form__text"
                                     placeholder=" "
                                     x-bind:value="fansdb_exists ? '{{ old('fansdb_id', $torrent->fansdb_id) }}' : ''"
-                                    :required="fansdb_exists"
+                                    :required="cats[cat].type === 'porn' && fansdb_exists"
                                 />
                                 <label class="form__label form__label--floating" for="auto_fansdb">
                                     FansDB ID

@@ -100,13 +100,14 @@ class TorrentController extends Controller
             ->findOrFail($id);
 
         $meta = null;
+        $pornMeta = null;
 
         if ($torrent->category->tv_meta && $torrent->tmdb_tv_id) {
             $meta = TmdbTv::with([
                 'genres',
                 'credits' => ['person', 'occupation'],
-                'companies',
                 'networks',
+                'companies',
                 'recommendedTv' => fn ($query) => $query
                     ->select('tmdb_tv.id', 'tmdb_tv.name', 'tmdb_tv.poster', 'tmdb_tv.first_air_date')
                     ->withMin('torrents', 'category_id')
@@ -140,6 +141,17 @@ class TorrentController extends Controller
                 ->find($torrent->igdb);
         }
 
+        // Porn meta logic
+        if ($torrent->category->porn_meta) {
+            if ($torrent->theporndb_scene_id) {
+                $pornMeta = \App\Models\ThePornDbSceneMeta::where('theporndb_scene_id', $torrent->theporndb_scene_id)->first();
+            } elseif ($torrent->theporndb_movie_id) {
+                $pornMeta = \App\Models\PornMovieMeta::where('theporndb_movie_id', $torrent->theporndb_movie_id)->first();
+            } elseif ($torrent->theporndb_jav_id) {
+                $pornMeta = \App\Models\PornJavMeta::where('theporndb_jav_id', $torrent->theporndb_jav_id)->first();
+            }
+        }
+
         return view('torrent.show', [
             'torrent' => $torrent,
             'user'    => $user,
@@ -154,6 +166,7 @@ class TorrentController extends Controller
                 ),
             'personal_freeleech' => cache()->get('personal_freeleech:'.$user->id),
             'meta'               => $meta,
+            'pornMeta'           => $pornMeta,
             'total_tips'         => $torrent->tips()->sum('bon'),
             'user_tips'          => $torrent->tips()->where('sender_id', '=', $user->id)->sum('bon'),
             'mediaInfo'          => $torrent->mediainfo !== null ? (new MediaInfo())->parse($torrent->mediainfo) : null,
