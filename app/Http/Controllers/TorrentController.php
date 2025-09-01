@@ -222,7 +222,16 @@ class TorrentController extends Controller
             403
         );
 
-        $torrent->update($request->validated());
+        $torrent->update(array_merge(
+            $request->validated(),
+            [
+                'theporndb_scene_id' => $request->boolean('scene_exists_on_theporndb') ? (string) $request->input('theporndb_scene_id') : null,
+                'theporndb_movie_id' => $request->boolean('movie_exists_on_theporndb') ? (string) $request->input('theporndb_movie_id') : null,
+                'theporndb_jav_id'   => $request->boolean('jav_exists_on_theporndb') ? (string) $request->input('theporndb_jav_id') : null,
+                'stashdb_id'         => $request->boolean('stashdb_exists') ? (string) $request->input('stashdb_id') : null,
+                'fansdb_id'          => $request->boolean('fansdb_exists') ? (string) $request->input('fansdb_id') : null,
+            ]
+        ));
 
         // Cover Image for No-Meta Torrents
         if ($request->hasFile('torrent-cover')) {
@@ -407,6 +416,11 @@ class TorrentController extends Controller
             'user_id'      => $user->id,
             'moderated_at' => now(),
             'moderated_by' => User::SYSTEM_USER_ID,
+            'theporndb_scene_id' => $request->boolean('scene_exists_on_theporndb') ? (string) $request->input('theporndb_scene_id') : null,
+            'theporndb_movie_id' => $request->boolean('movie_exists_on_theporndb') ? (string) $request->input('theporndb_movie_id') : null,
+            'theporndb_jav_id'   => $request->boolean('jav_exists_on_theporndb') ? (string) $request->input('theporndb_jav_id') : null,
+            'stashdb_id'         => $request->boolean('stashdb_exists') ? (string) $request->input('stashdb_id') : null,
+            'fansdb_id'          => $request->boolean('fansdb_exists') ? (string) $request->input('fansdb_id') : null,
         ] + $request->safe()->except(['torrent']));
 
         // Populate the status/seeders/leechers/times_completed fields for the external tracker
