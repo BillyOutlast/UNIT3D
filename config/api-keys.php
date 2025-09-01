@@ -24,4 +24,8 @@ return [
     */
 
     'tmdb' => env('TMDB_API_KEY', ''),
+
+    'theporndb' => env('THEPORNDB_API_KEY', ''),
+    'fansdb' => env('FANSDB_KEY', ''),
+    'theporndb' => env('THEPORNDB_KEY', ''),
 ];

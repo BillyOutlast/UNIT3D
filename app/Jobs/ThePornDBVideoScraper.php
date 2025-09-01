@@ -32,7 +32,19 @@ class ThePornDBVideoScraper implements ShouldQueue
     public function handle(): void
     {
         $endpoint = sprintf('https://api.theporndb.net/%s/%s?add_to_collection=false', $this->type, $this->id);
-        $response = Http::get($endpoint);
+        $apiKey = config('api-keys.theporndb');
+        $headers = [
+            'Authorization' => 'Bearer ' . $apiKey,
+        ];
+        Log::debug('ThePornDBVideoScraper: Request', [
+            'endpoint' => $endpoint,
+            'headers' => $headers,
+        ]);
+        $response = Http::withHeaders($headers)->get($endpoint);
+        Log::debug('ThePornDBVideoScraper: Response', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
 
         if ($response->successful()) {
             $data = $response->json();
@@ -64,10 +76,10 @@ class ThePornDBVideoScraper implements ShouldQueue
                 'url' => $main['url'] ?? null,
                 'image' => $main['image'] ?? null,
                 'description' => $main['description'] ?? null,
-                'performers' => $performers,
-                'site' => $site,
-                'tags' => $tags,
-                'raw' => $data,
+                'performers' => json_encode($performers),
+                'site' => json_encode($site),
+                'tags' => json_encode($tags),
+                'raw' => json_encode($data),
             ];
             if ($this->type === 'scenes') {
                 \App\Models\ThePornDbSceneMeta::updateOrCreate([
