@@ -29,7 +29,10 @@
 @section('main')
     @switch(true)
         @case($torrent->category->porn_meta)
-            @include('torrent.partials.porn-meta', ['category' => $torrent->category, 'meta' => $pornMeta])
+            @include('torrent.partials.porn-meta', [
+                'category' => $torrent->category,
+                'meta' => isset($pornMeta) ? $pornMeta : null
+            ])
             @break
         @case($torrent->category->movie_meta)
             @include('torrent.partials.movie-meta', ['category' => $torrent->category, 'tmdb' => $torrent->tmdb_movie_id])

@@ -26,13 +26,18 @@
             cats: JSON.parse(atob('{{ base64_encode(json_encode($categories)) }}')),
             type: {{ (int) $torrent->type_id }},
             types: JSON.parse(atob('{{ base64_encode(json_encode($types)) }}')),
-            tmdb_movie_exists:
-                {{ Js::from(old('movie_exists_on_tmdb', $torrent->tmdb_movie_id) !== null) }},
+            tmdb_movie_exists: {{ Js::from(old('movie_exists_on_tmdb', $torrent->tmdb_movie_id) !== null) }},
             tmdb_tv_exists: {{ Js::from(old('tv_exists_on_tmdb', $torrent->tmdb_tv_id) !== null) }},
             imdb_title_exists: {{ Js::from(old('title_exists_on_imdb', $torrent->imdb) !== null) }},
             tvdb_tv_exists: {{ Js::from(old('tv_exists_on_tvdb', $torrent->tvdb) !== null) }},
             mal_anime_exists: {{ Js::from(old('anime_exists_on_mal', $torrent->mal) !== null) }},
             igdb_game_exists: {{ Js::from(old('game_exists_on_igdb', $torrent->igdb) !== null) }},
+            // Porn meta contracts
+            movie_exists_on_theporndb: {{ Js::from(old('movie_exists_on_theporndb', $torrent->theporndb_movie_id) ? true : false) }},
+            jav_exists_on_theporndb: {{ Js::from(old('jav_exists_on_theporndb', $torrent->theporndb_jav_id) ? true : false) }},
+            scene_exists_on_theporndb: {{ Js::from(old('scene_exists_on_theporndb', $torrent->theporndb_scene_id) ? true : false) }},
+            stashdb_exists: {{ Js::from(old('stashdb_exists', $torrent->stashdb_id) ? true : false) }},
+            fansdb_exists: {{ Js::from(old('fansdb_exists', $torrent->fansdb_id) ? true : false) }},
         }"
     >
         <h2 class="panel__heading">{{ __('common.edit') }}: {{ $torrent->name }}</h2>
@@ -105,167 +110,157 @@
                     </label>
                 </p>
                     <!-- Porn Meta Fields -->
-                    <div class="form__group--horizontal" x-show="cats[cat].type === 'porn'">
-                        <div class="form__group--vertical">
-                            <p class="form__group">
-                                <input
-                                    type="checkbox"
-                                    class="form__checkbox"
-                                    id="scene_exists_on_theporndb"
-                                    name="scene_exists_on_theporndb"
-                                    value="1"
-                                    @checked(old('scene_exists_on_theporndb', $torrent->theporndb_scene_id))
-                                    x-model="scene_exists_on_theporndb"
-                                    @change="scene_exists_on_theporndb = !!$event.target.checked"
-                                />
-                                <label class="form__label" for="scene_exists_on_theporndb">
-                                    This scene exists on ThePornDB
-                                </label>
-                            </p>
-                            <p class="form__group" x-show="!!scene_exists_on_theporndb">
-                                <input type="hidden" name="theporndb_scene_id" value="0" />
-                                <input
-                                    type="text"
-                                    name="theporndb_scene_id"
-                                    id="auto_theporndb_scene"
-                                    class="form__text"
-                                    placeholder=" "
-                                    x-bind:value="scene_exists_on_theporndb ? '{{ old('theporndb_scene_id', $torrent->theporndb_scene_id) }}' : ''"
-                                    :required="cats[cat].type === 'porn' && scene_exists_on_theporndb"
-                                />
-                                <label class="form__label form__label--floating" for="auto_theporndb_scene">
-                                    ThePornDB Scene ID
-                                </label>
-                            </p>
-                        </div>
-                        <div class="form__group--vertical">
-                            <p class="form__group">
-                                <input
-                                    type="checkbox"
-                                    class="form__checkbox"
-                                    id="movie_exists_on_theporndb"
-                                    name="movie_exists_on_theporndb"
-                                    value="1"
-                                    @checked(old('movie_exists_on_theporndb', $torrent->theporndb_movie_id))
-                                    x-model="movie_exists_on_theporndb"
-                                    @change="movie_exists_on_theporndb = !!$event.target.checked"
-                                />
-                                <label class="form__label" for="movie_exists_on_theporndb">
-                                    This movie exists on ThePornDB
-                                </label>
-                            </p>
-                            <p class="form__group" x-show="!!movie_exists_on_theporndb">
-                                <input type="hidden" name="theporndb_movie_id" value="0" />
-                                <input
-                                    type="text"
-                                    name="theporndb_movie_id"
-                                    id="auto_theporndb_movie"
-                                    class="form__text"
-                                    placeholder=" "
-                                    x-bind:value="movie_exists_on_theporndb ? '{{ old('theporndb_movie_id', $torrent->theporndb_movie_id) }}' : ''"
-                                    :required="cats[cat].type === 'porn' && movie_exists_on_theporndb"
-                                />
-                                <label class="form__label form__label--floating" for="auto_theporndb_movie">
-                                    ThePornDB Movie ID
-                                </label>
-                            </p>
-                        </div>
-                        <div class="form__group--vertical">
-                            <p class="form__group">
-                                <input
-                                    type="checkbox"
-                                    class="form__checkbox"
-                                    id="jav_exists_on_theporndb"
-                                    name="jav_exists_on_theporndb"
-                                    value="1"
-                                    @checked(old('jav_exists_on_theporndb', $torrent->theporndb_jav_id))
-                                    x-model="jav_exists_on_theporndb"
-                                    @change="jav_exists_on_theporndb = !!$event.target.checked"
-                                />
-                                <label class="form__label" for="jav_exists_on_theporndb">
-                                    This JAV exists on ThePornDB
-                                </label>
-                            </p>
-                            <p class="form__group" x-show="!!jav_exists_on_theporndb">
-                                <input type="hidden" name="theporndb_jav_id" value="0" />
-                                <input
-                                    type="text"
-                                    name="theporndb_jav_id"
-                                    id="auto_theporndb_jav"
-                                    class="form__text"
-                                    placeholder=" "
-                                    x-bind:value="jav_exists_on_theporndb ? '{{ old('theporndb_jav_id', $torrent->theporndb_jav_id) }}' : ''"
-                                    :required="cats[cat].type === 'porn' && jav_exists_on_theporndb"
-                                />
-                                <label class="form__label form__label--floating" for="auto_theporndb_jav">
-                                    ThePornDB JAV ID
-                                </label>
-                            </p>
-                        </div>
-                        <div class="form__group--vertical">
-                            <p class="form__group">
-                                <input
-                                    type="checkbox"
-                                    class="form__checkbox"
-                                    id="stashdb_exists"
-                                    name="stashdb_exists"
-                                    value="1"
-                                    @checked(old('stashdb_exists', $torrent->stashdb_id))
-                                    x-model="stashdb_exists"
-                                    @change="stashdb_exists = !!$event.target.checked"
-                                />
-                                <label class="form__label" for="stashdb_exists">
-                                    This scene exists on StashDB
-                                </label>
-                            </p>
-                            <p class="form__group" x-show="!!stashdb_exists">
-                                <input type="hidden" name="stashdb_id" value="0" />
-                                <input
-                                    type="text"
-                                    name="stashdb_id"
-                                    id="auto_stashdb"
-                                    class="form__text"
-                                    placeholder=" "
-                                    x-bind:value="stashdb_exists ? '{{ old('stashdb_id', $torrent->stashdb_id) }}' : ''"
-                                    :required="cats[cat].type === 'porn' && stashdb_exists"
-                                />
-                                <label class="form__label form__label--floating" for="auto_stashdb">
-                                    StashDB ID
-                                </label>
-                            </p>
-                        </div>
-                        <div class="form__group--vertical">
-                            <p class="form__group">
-                                <input
-                                    type="checkbox"
-                                    class="form__checkbox"
-                                    id="fansdb_exists"
-                                    name="fansdb_exists"
-                                    value="1"
-                                    @checked(old('fansdb_exists', $torrent->fansdb_id))
-                                    x-model="fansdb_exists"
-                                    @change="fansdb_exists = !!$event.target.checked"
-                                />
-                                <label class="form__label" for="fansdb_exists">
-                                    This scene exists on FansDB
-                                </label>
-                            </p>
-                            <p class="form__group" x-show="!!fansdb_exists">
-                                <input type="hidden" name="fansdb_id" value="0" />
-                                <input
-                                    type="text"
-                                    name="fansdb_id"
-                                    id="auto_fansdb"
-                                    class="form__text"
-                                    placeholder=" "
-                                    x-bind:value="fansdb_exists ? '{{ old('fansdb_id', $torrent->fansdb_id) }}' : ''"
-                                    :required="cats[cat].type === 'porn' && fansdb_exists"
-                                />
-                                <label class="form__label form__label--floating" for="auto_fansdb">
-                                    FansDB ID
-                                </label>
-                            </p>
-                        </div>
+                    <div class="form__group--vertical" x-show="cats[cat].type === 'porn'">
+                        <p class="form__group">
+                            <input
+                                type="checkbox"
+                                class="form__checkbox"
+                                id="scene_exists_on_theporndb"
+                                name="scene_exists_on_theporndb"
+                                value="1"
+                                @checked(old('scene_exists_on_theporndb', $torrent->theporndb_scene_id))
+                                x-model="scene_exists_on_theporndb"
+                            />
+                            <label class="form__label" for="scene_exists_on_theporndb">
+                                This scene exists on ThePornDB
+                            </label>
+                        </p>
+                        <p class="form__group" x-show="cats[cat].type === 'porn' && scene_exists_on_theporndb">
+                            <input type="hidden" name="theporndb_scene_id" value="0" />
+                            <input
+                                id="theporndb_scene_id"
+                                class="form__text"
+                                name="theporndb_scene_id"
+                                type="text"
+                                placeholder=" "
+                                value="{{ old('theporndb_scene_id', $torrent->theporndb_scene_id) }}"
+                                x-bind:value="scene_exists_on_theporndb ? '{{ old('theporndb_scene_id', $torrent->theporndb_scene_id) }}' : ''"
+                                x-bind:required="scene_exists_on_theporndb"
+                            />
+                            <label class="form__label form__label--floating" for="theporndb_scene_id">
+                                ThePornDB Scene ID
+                            </label>
+                        </p>
+                        <p class="form__group">
+                            <input
+                                type="checkbox"
+                                class="form__checkbox"
+                                id="movie_exists_on_theporndb"
+                                name="movie_exists_on_theporndb"
+                                value="1"
+                                @checked(old('movie_exists_on_theporndb', $torrent->theporndb_movie_id))
+                                x-model="movie_exists_on_theporndb"
+                            />
+                            <label class="form__label" for="movie_exists_on_theporndb">
+                                This movie exists on ThePornDB
+                            </label>
+                        </p>
+                        <p class="form__group" x-show="cats[cat].type === 'porn' && movie_exists_on_theporndb">
+                            <input type="hidden" name="theporndb_movie_id" value="0" />
+                            <input
+                                id="theporndb_movie_id"
+                                class="form__text"
+                                name="theporndb_movie_id"
+                                type="text"
+                                placeholder=" "
+                                value="{{ old('theporndb_movie_id', $torrent->theporndb_movie_id) }}"
+                                x-bind:value="movie_exists_on_theporndb ? '{{ old('theporndb_movie_id', $torrent->theporndb_movie_id) }}' : ''"
+                                x-bind:required="movie_exists_on_theporndb"
+                            />
+                            <label class="form__label form__label--floating" for="theporndb_movie_id">
+                                ThePornDB Movie ID
+                            </label>
+                        </p>
+                        <p class="form__group">
+                            <input
+                                type="checkbox"
+                                class="form__checkbox"
+                                id="jav_exists_on_theporndb"
+                                name="jav_exists_on_theporndb"
+                                value="1"
+                                @checked(old('jav_exists_on_theporndb', $torrent->theporndb_jav_id))
+                                x-model="jav_exists_on_theporndb"
+                            />
+                            <label class="form__label" for="jav_exists_on_theporndb">
+                                This JAV exists on ThePornDB
+                            </label>
+                        </p>
+                        <p class="form__group" x-show="cats[cat].type === 'porn' && jav_exists_on_theporndb">
+                            <input type="hidden" name="theporndb_jav_id" value="0" />
+                            <input
+                                id="theporndb_jav_id"
+                                class="form__text"
+                                name="theporndb_jav_id"
+                                type="text"
+                                placeholder=" "
+                                value="{{ old('theporndb_jav_id', $torrent->theporndb_jav_id) }}"
+                                x-bind:value="jav_exists_on_theporndb ? '{{ old('theporndb_jav_id', $torrent->theporndb_jav_id) }}' : ''"
+                                x-bind:required="jav_exists_on_theporndb"
+                            />
+                            <label class="form__label form__label--floating" for="theporndb_jav_id">
+                                ThePornDB JAV ID
+                            </label>
+                        </p>
+                        <p class="form__group">
+                            <input
+                                type="checkbox"
+                                class="form__checkbox"
+                                id="stashdb_exists"
+                                name="stashdb_exists"
+                                value="1"
+                                @checked(old('stashdb_exists', $torrent->stashdb_id))
+                                x-model="stashdb_exists"
+                            />
+                            <label class="form__label" for="stashdb_exists">
+                                This scene exists on StashDB
+                            </label>
+                        </p>
+                        <p class="form__group" x-show="cats[cat].type === 'porn' && stashdb_exists">
+                            <input type="hidden" name="stashdb_id" value="0" />
+                            <input
+                                id="stashdb_id"
+                                class="form__text"
+                                name="stashdb_id"
+                                type="text"
+                                placeholder=" "
+                                value="{{ old('stashdb_id', $torrent->stashdb_id) }}"
+                                x-bind:value="stashdb_exists ? '{{ old('stashdb_id', $torrent->stashdb_id) }}' : ''"
+                                x-bind:required="stashdb_exists"
+                            />
+                            <label class="form__label form__label--floating" for="stashdb_id">
+                                StashDB ID
+                            </label>
+                        </p>
+                        <p class="form__group">
+                            <input
+                                type="checkbox"
+                                class="form__checkbox"
+                                id="fansdb_exists"
+                                name="fansdb_exists"
+                                value="1"
+                                @checked(old('fansdb_exists', $torrent->fansdb_id))
+                                x-model="fansdb_exists"
+                            />
+                            <label class="form__label" for="fansdb_exists">
+                                This scene exists on FansDB
+                            </label>
+                        </p>
+                        <p class="form__group" x-show="cats[cat].type === 'porn' && fansdb_exists">
+                            <input type="hidden" name="fansdb_id" value="0" />
+                            <input
+                                id="fansdb_id"
+                                class="form__text"
+                                name="fansdb_id"
+                                type="text"
+                                placeholder=" "
+                                value="{{ old('fansdb_id', $torrent->fansdb_id) }}"
+                                x-bind:value="fansdb_exists ? '{{ old('fansdb_id', $torrent->fansdb_id) }}' : ''"
+                                x-bind:required="fansdb_exists"
+                            />
+                            <label class="form__label form__label--floating" for="fansdb_id">
+                                FansDB ID
+                            </label>
+                        </p>
                     </div>
                 <p class="form__group">
                     <select
