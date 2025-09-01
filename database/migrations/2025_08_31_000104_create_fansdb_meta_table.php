@@ -9,7 +9,6 @@ return new class extends Migration {
         Schema::create('fansdb_meta', function (Blueprint $table) {
             $table->id();
             $table->string('fansdb_id')->unique();
-            $table->foreignId('torrent_id')->constrained()->onDelete('cascade');
             $table->string('title')->nullable();
             $table->date('release_date')->nullable();
             $table->string('studio')->nullable();

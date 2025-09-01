@@ -14,18 +14,16 @@ class StashBoxSceneScraper implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $torrentId;
     public string $sceneId;
     public string $endpoint;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(string $sceneId, string $endpoint, int $torrentId)
+    public function __construct(string $sceneId, string $endpoint)
     {
         $this->sceneId = $sceneId;
         $this->endpoint = $endpoint;
-        $this->torrentId = $torrentId;
     }
 
     /**
@@ -58,29 +56,13 @@ class StashBoxSceneScraper implements ShouldQueue
             if ($this->endpoint === 'https://stashdb.org/graphql') {
                 \App\Models\StashdbMeta::updateOrCreate([
                     'stashdb_id' => $this->sceneId,
-                    'torrent_id' => $this->torrentId,
                 ], [
-                    'title' => $scene['title'] ?? null,
-                    'release_date' => $scene['release_date'] ?? null,
-                    'studio' => $scene['studio']['name'] ?? null,
-                    'performers' => $scene['performers'] ?? null,
-                    'urls' => $scene['urls'] ?? null,
-                    'details' => $scene['details'] ?? null,
-                    'director' => $scene['director'] ?? null,
                     'raw' => $scene,
                 ]);
             } elseif ($this->endpoint === 'https://fansdb.cc/graphql') {
                 \App\Models\FansdbMeta::updateOrCreate([
                     'fansdb_id' => $this->sceneId,
-                    'torrent_id' => $this->torrentId,
                 ], [
-                    'title' => $scene['title'] ?? null,
-                    'release_date' => $scene['release_date'] ?? null,
-                    'studio' => $scene['studio']['name'] ?? null,
-                    'performers' => $scene['performers'] ?? null,
-                    'urls' => $scene['urls'] ?? null,
-                    'details' => $scene['details'] ?? null,
-                    'director' => $scene['director'] ?? null,
                     'raw' => $scene,
                 ]);
             }

@@ -50,69 +50,28 @@ class ProcessPornJob implements ShouldQueue
             return;
         }
 
-        // Example: Gather metadata for each ID
-        $pornMeta = [
-            'theporndb_scene_id' => $torrent->theporndb_scene_id,
-            'theporndb_movie_id' => $torrent->theporndb_movie_id,
-            'theporndb_jav_id'   => $torrent->theporndb_jav_id,
-            'stashdb_id'         => $torrent->stashdb_id,
-            'fansdb_id'          => $torrent->fansdb_id,
-        ];
-
-        foreach ($pornMeta as $key => $id) {
-            if ($id) {
-                // Example: Call external API for $key/$id and store metadata
-                \Log::info('ProcessPornJob: Fetching metadata', ['key' => $key, 'id' => $id]);
-                $metadata = null;
-                if ($key === 'theporndb_scene_id') {
-                    dispatch(new \App\Jobs\ThePornDBVideoScraper($id, 'scenes', $torrent->id));
-                    // $metadata = fetchThePornDbScene($id); // Your scraper logic
-                    \App\Models\ThePornDbSceneMeta::updateOrCreate([
-                        'theporndb_scene_id' => $id,
-                        'torrent_id' => $torrent->id,
-                    ], [
-                        'raw' => $metadata,
-                    ]);
-                } elseif ($key === 'theporndb_movie_id') {
-                    dispatch(new \App\Jobs\ThePornDBVideoScraper($id, 'movies', $torrent->id));
-                    // $metadata = fetchThePornDbMovie($id);
-                    \App\Models\PornMovieMeta::updateOrCreate([
-                        'movie_id' => $id,
-                        'torrent_id' => $torrent->id,
-                    ], [
-                        'title' => $metadata['title'] ?? null,
-                        'release_date' => $metadata['release_date'] ?? null,
-                        'studio' => $metadata['studio'] ?? null,
-                        'performers' => $metadata['performers'] ?? null,
-                        'urls' => $metadata['urls'] ?? null,
-                        'details' => $metadata['details'] ?? null,
-                        'director' => $metadata['director'] ?? null,
-                        'raw' => $metadata,
-                    ]);
-                } elseif ($key === 'theporndb_jav_id') {
-                    dispatch(new \App\Jobs\ThePornDBVideoScraper($id, 'jave', $torrent->id));
-                    // $metadata = fetchThePornDbJav($id);
-                    \App\Models\PornJavMeta::updateOrCreate([
-                        'jav_id' => $id,
-                        'torrent_id' => $torrent->id,
-                    ], [
-                        'title' => $metadata['title'] ?? null,
-                        'release_date' => $metadata['release_date'] ?? null,
-                        'studio' => $metadata['studio'] ?? null,
-                        'performers' => $metadata['performers'] ?? null,
-                        'urls' => $metadata['urls'] ?? null,
-                        'details' => $metadata['details'] ?? null,
-                        'director' => $metadata['director'] ?? null,
-                        'raw' => $metadata,
-                    ]);
-                } elseif ($key === 'stashdb_id') {
-                    $endpoint = 'https://stashdb.org/graphql';
-                    dispatch(new \App\Jobs\StashBoxSceneScraper($id, $endpoint, $torrent->id));
-                } elseif ($key === 'fansdb_id') {
-                    $endpoint = 'https://fansdb.cc/graphql';
-                    dispatch(new \App\Jobs\StashBoxSceneScraper($id, $endpoint, $torrent->id));
-                }
-            }
+        // Gather metadata for each external ID and dispatch scrapers
+        if ($torrent->theporndb_scene_id) {
+            \Log::info('ProcessPornJob: Fetching ThePornDB Scene metadata', ['id' => $torrent->theporndb_scene_id]);
+            dispatch(new \App\Jobs\ThePornDBVideoScraper($torrent->theporndb_scene_id, 'scenes'));
+        }
+        if ($torrent->theporndb_movie_id) {
+            \Log::info('ProcessPornJob: Fetching ThePornDB Movie metadata', ['id' => $torrent->theporndb_movie_id]);
+            dispatch(new \App\Jobs\ThePornDBVideoScraper($torrent->theporndb_movie_id, 'movies'));
+        }
+        if ($torrent->theporndb_jav_id) {
+            \Log::info('ProcessPornJob: Fetching ThePornDB JAV metadata', ['id' => $torrent->theporndb_jav_id]);
+            dispatch(new \App\Jobs\ThePornDBVideoScraper($torrent->theporndb_jav_id, 'jave'));
+        }
+        if ($torrent->stashdb_id) {
+            \Log::info('ProcessPornJob: Fetching StashDB metadata', ['id' => $torrent->stashdb_id]);
+            $endpoint = 'https://stashdb.org/graphql';
+            dispatch(new \App\Jobs\StashBoxSceneScraper($torrent->stashdb_id, $endpoint));
+        }
+        if ($torrent->fansdb_id) {
+            \Log::info('ProcessPornJob: Fetching FansDB metadata', ['id' => $torrent->fansdb_id]);
+            $endpoint = 'https://fansdb.cc/graphql';
+            dispatch(new \App\Jobs\StashBoxSceneScraper($torrent->fansdb_id, $endpoint));
         }
 
         cache()->put("porn-meta-job:{$this->torrentId}", now(), 8 * 3600);

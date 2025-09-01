@@ -6,15 +6,20 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-    Schema::create('theporndb_scene_metas', function (Blueprint $table) {
-        $table->id();
-        $table->string('theporndb_scene_id')->index();
-        $table->unsignedBigInteger('torrent_id');
-        $table->json('raw')->nullable();
-        $table->timestamps();
-
-        $table->foreign('torrent_id')->references('id')->on('torrents')->onDelete('cascade');
-    });
+        Schema::create('theporndb_scene_metas', function (Blueprint $table) {
+            $table->id();
+            $table->string('theporndb_scene_id')->index();
+            $table->string('title')->nullable();
+            $table->string('type')->nullable();
+            $table->string('url')->nullable();
+            $table->string('image')->nullable();
+            $table->text('description')->nullable();
+            $table->json('performers')->nullable();
+            $table->json('site')->nullable();
+            $table->json('tags')->nullable();
+            $table->json('raw')->nullable();
+            $table->timestamps();
+        });
     }
     public function down(): void
     {

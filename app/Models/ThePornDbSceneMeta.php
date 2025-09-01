@@ -9,8 +9,4 @@ class ThePornDbSceneMeta extends Model
     protected $guarded = [];
     public $timestamps = true;
 
-    public function torrent()
-    {
-        return $this->belongsTo(Torrent::class);
-    }
 }

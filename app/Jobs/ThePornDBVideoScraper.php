@@ -14,18 +14,16 @@ class ThePornDBVideoScraper implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $torrentId;
     public string $id;
     public string $type;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(string $id, string $type, int $torrentId)
+    public function __construct(string $id, string $type)
     {
         $this->id = $id;
         $this->type = $type; // 'scenes', 'movies', or 'jave'
-        $this->torrentId = $torrentId;
     }
 
     /**
@@ -38,48 +36,51 @@ class ThePornDBVideoScraper implements ShouldQueue
 
         if ($response->successful()) {
             $data = $response->json();
+            $main = $data['data'] ?? [];
+            $performers = [];
+            foreach (($main['performers'] ?? []) as $p) {
+                if (isset($p['id']) && isset($p['name'])) {
+                    $performers[] = [
+                        'id' => $p['id'],
+                        'name' => $p['name'],
+                    ];
+                }
+            }
+            $site = isset($main['site']) ? [
+                'uuid' => $main['site']['uuid'] ?? null,
+                'name' => $main['site']['name'] ?? null,
+            ] : null;
+            $tags = [];
+            foreach (($main['tags'] ?? []) as $t) {
+                $tags[] = [
+                    'uuid' => $t['uuid'] ?? null,
+                    'name' => $t['name'] ?? null,
+                ];
+            }
+            $save = [
+                'theporndb_scene_id' => $main['id'] ?? null,
+                'title' => $main['title'] ?? null,
+                'type' => $main['type'] ?? null,
+                'url' => $main['url'] ?? null,
+                'image' => $main['image'] ?? null,
+                'description' => $main['description'] ?? null,
+                'performers' => $performers,
+                'site' => $site,
+                'tags' => $tags,
+                'raw' => $data,
+            ];
             if ($this->type === 'scenes') {
-                \App\Models\PornSceneMeta::updateOrCreate([
-                    'scene_id' => $this->id,
-                    'torrent_id' => $this->torrentId,
-                ], [
-                    'title' => $data['title'] ?? null,
-                    'release_date' => $data['release_date'] ?? null,
-                    'studio' => $data['studio'] ?? null,
-                    'performers' => $data['performers'] ?? null,
-                    'urls' => $data['urls'] ?? null,
-                    'details' => $data['details'] ?? null,
-                    'director' => $data['director'] ?? null,
-                    'raw' => $data,
-                ]);
+                \App\Models\ThePornDbSceneMeta::updateOrCreate([
+                    'theporndb_scene_id' => $main['id'] ?? $this->id,
+                ], $save);
             } elseif ($this->type === 'movies') {
                 \App\Models\PornMovieMeta::updateOrCreate([
-                    'movie_id' => $this->id,
-                    'torrent_id' => $this->torrentId,
-                ], [
-                    'title' => $data['title'] ?? null,
-                    'release_date' => $data['release_date'] ?? null,
-                    'studio' => $data['studio'] ?? null,
-                    'performers' => $data['performers'] ?? null,
-                    'urls' => $data['urls'] ?? null,
-                    'details' => $data['details'] ?? null,
-                    'director' => $data['director'] ?? null,
-                    'raw' => $data,
-                ]);
+                    'theporndb_movie_id' => $main['id'] ?? $this->id,
+                ], $save);
             } elseif ($this->type === 'jave') {
                 \App\Models\PornJavMeta::updateOrCreate([
-                    'jav_id' => $this->id,
-                    'torrent_id' => $this->torrentId,
-                ], [
-                    'title' => $data['title'] ?? null,
-                    'release_date' => $data['release_date'] ?? null,
-                    'studio' => $data['studio'] ?? null,
-                    'performers' => $data['performers'] ?? null,
-                    'urls' => $data['urls'] ?? null,
-                    'details' => $data['details'] ?? null,
-                    'director' => $data['director'] ?? null,
-                    'raw' => $data,
-                ]);
+                    'theporndb_jav_id' => $main['id'] ?? $this->id,
+                ], $save);
             }
         } else {
             Log::error('ThePornDBVideoScraper failed', ['id' => $this->id, 'type' => $this->type, 'response' => $response->body()]);
